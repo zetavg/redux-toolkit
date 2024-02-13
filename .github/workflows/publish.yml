@@ -20,6 +20,7 @@ jobs:
     secrets: inherit
 
   prepare-publish:
+    name: Prepare publish
     runs-on: ubuntu-latest
     outputs:
       workspace-paths: ${{ steps.list-workspaces.outputs.workspace-paths }}
@@ -41,7 +42,7 @@ jobs:
   publish:
     name: Publish
     needs:
-      # - test # TODO: Need this!
+      - test
       - prepare-publish
     runs-on: ubuntu-latest
     strategy:
@@ -57,7 +58,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Environment
+      - name: Setup environment
         uses: ./.github/actions/setup-environment
       - name: Publish package
         id: publish
