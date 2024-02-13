@@ -1,0 +1,43 @@
+{
+  "name": "@zetavg/redux-toolkit-example-react-app",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit --pretty",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@radix-ui/themes": "^2",
+    "@zetavg/redux-toolkit": "workspace:^",
+    "clsx": "^2",
+    "nanoid": "^5",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-redux": "^9",
+    "tailwind-merge": "^2"
+  },
+  "devDependencies": {
+    "@types/eslint": "*",
+    "@types/jest": "*",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4",
+    "autoprefixer": "^10",
+    "eslint": "*",
+    "eslint-config-workspace": "workspace:^",
+    "eslint-plugin-react": "^7",
+    "eslint-plugin-react-hooks": "^4",
+    "jest": "*",
+    "jest-config-workspace": "workspace:^",
+    "radix-ui-themes-with-tailwind": "^1",
+    "tailwindcss": "^3",
+    "tsconfig-workspace": "workspace:^",
+    "typescript": "*",
+    "vite": "^5"
+  }
+}

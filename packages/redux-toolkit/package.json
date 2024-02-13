@@ -1,6 +1,6 @@
 {
   "name": "@zetavg/redux-toolkit",
-  "version": "0.0.1",
+  "version": "0.0.1-pre1",
   "main": "dist/cjs/index.js",
   "module": "dist/mjs/index.js",
   "types": "dist/types/index.d.ts",

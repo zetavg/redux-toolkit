@@ -1,6 +1,6 @@
 export { combineSlices } from './combineSlices';
 export { deepMerge } from './deepMerge';
-export { makeRoot } from './makeRoot';
+export { makeRoot, type Persistor, RESTORE_ACTION_TYPE } from './makeRoot';
 export { makeSlice } from './makeSlice';
 export { makeStore } from './makeStore';
 export { mapObjectValues } from './mapObjectValues';

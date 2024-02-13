@@ -34,6 +34,7 @@ export const persistSlice = createSlice({
 export type Persistor = {
   restored: boolean;
   subscribeRestored: (callback: () => void) => () => void;
+  flush: () => void;
   restorePersistedState: () => void;
 };
 
@@ -99,7 +100,8 @@ export const makeRoot = <Slices extends [AnySliceLike, ...Array<AnySliceLike>]>(
   let persistEndingState: ReturnType<
     CombinedSliceReducer<Id<InitialState<Slices>>>
   > | null = null;
-  let persistDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+  let persistDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let doPersist: (() => void) | null = null;
   const persistMiddleware = (store: any) => (next: any) => (action: any) => {
     const prevState = store.getState();
     const result = next(action);
@@ -112,9 +114,13 @@ export const makeRoot = <Slices extends [AnySliceLike, ...Array<AnySliceLike>]>(
       if (!persistStartingState) persistStartingState = prevState;
       persistEndingState = nextState;
 
-      if (persistDebounceTimeout) clearTimeout(persistDebounceTimeout);
-      persistDebounceTimeout = setTimeout(() => {
-        persistDebounceTimeout = null;
+      if (persistDebounceTimer) clearTimeout(persistDebounceTimer);
+      doPersist = () => {
+        if (persistDebounceTimer) clearTimeout(persistDebounceTimer);
+        persistDebounceTimer = null;
+
+        doPersist = null;
+
         if (!persistStartingState || !persistEndingState) return;
         const diff = getObjectDiff(persistStartingState, persistEndingState);
         if (debug) {
@@ -184,7 +190,8 @@ export const makeRoot = <Slices extends [AnySliceLike, ...Array<AnySliceLike>]>(
 
           persistedSensitiveStateRef.value = stateToPersist;
         })();
-      }, persistDebounce);
+      };
+      persistDebounceTimer = setTimeout(doPersist, persistDebounce);
     }
 
     return result;
@@ -211,13 +218,16 @@ export const makeRoot = <Slices extends [AnySliceLike, ...Array<AnySliceLike>]>(
 
       return unsubscribe;
     },
+    flush: () => {
+      if (doPersist) doPersist();
+    },
     restorePersistedState: () => {},
   };
 
   let restorePersistedStateDebounceTimer: ReturnType<typeof setTimeout> | null =
     null;
   const restorePersistedState = async () => {
-    if (persistDebounceTimeout) {
+    if (persistDebounceTimer) {
       // Delay restorePersistedState if a persist is being debounced
       if (restorePersistedStateDebounceTimer)
         clearTimeout(restorePersistedStateDebounceTimer);

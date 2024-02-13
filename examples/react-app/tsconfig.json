@@ -1,0 +1,35 @@
+{
+  "extends": "tsconfig-workspace",
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      // Use the un-compiled source code from workspace dependencies to avoid the need to build them first during development.
+      // To simulate using the compiled code as installing the packages from npm, comment out the following path mappings.
+      "@zetavg/redux-toolkit": ["../../packages/redux-toolkit/src"]
+    }
+  }
+}

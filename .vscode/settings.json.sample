@@ -15,6 +15,10 @@
     {
       "name": "examples/users-databases",
       "rootPath": "examples/users-databases"
+    },
+    {
+      "name": "examples/react-app",
+      "rootPath": "examples/react-app"
     }
   ]
 }
