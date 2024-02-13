@@ -1,6 +1,6 @@
 name: Setup Environment
 inputs:
-  skip_yarn_install:
+  skip-yarn-install:
     required: false
     default: false
 runs:
@@ -14,7 +14,7 @@ runs:
       shell: bash
       run: corepack enable
     - name: Cache node_modules
-      if: ${{ inputs.skip_yarn_install != 'true' }}
+      if: ${{ inputs.skip-yarn-install != 'true' }}
       uses: actions/cache@v4
       env:
         cache-name: node_modules
@@ -24,7 +24,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-${{ env.cache-name }}-
     - name: Install dependencies
-      if: ${{ inputs.skip_yarn_install != 'true' }}
+      if: ${{ inputs.skip-yarn-install != 'true' }}
       shell: bash
       run: |
         yarn install

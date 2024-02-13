@@ -1,6 +1,6 @@
 {
   "name": "@zetavg/redux-toolkit",
-  "version": "0.0.1-pre1",
+  "version": "0.0.1-pre2",
   "main": "dist/cjs/index.js",
   "module": "dist/mjs/index.js",
   "types": "dist/types/index.d.ts",
@@ -13,7 +13,7 @@
     "test": "jest",
     "build": "tsc --project tsconfig.build.json && tsc --project tsconfig.build.mjs.json && tsc --project tsconfig.build.cjs.json",
     "publish": "yarn build && yarn npm publish --access public",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist && rm -rf package.tgz"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2"

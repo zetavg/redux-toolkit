@@ -1,0 +1,104 @@
+name: Publish
+run-name: Publish ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.version }}
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish'
+        type: string
+        required: true
+
+permissions:
+  packages: write
+
+jobs:
+  test:
+    name: Test
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+
+  prepare-publish:
+    runs-on: ubuntu-latest
+    outputs:
+      workspace-paths: ${{ steps.list-workspaces.outputs.workspace-paths }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+        with:
+          skip-yarn-install: true
+      - name: List packages
+        uses: zetavg/yarn-workspaces-list-action@v2.beta2
+        id: list-workspaces
+        with:
+          condition: '[ -f "$workspace_path/package.json" ] && jq -e ".scripts.publish" "$workspace_path/package.json"'
+
+  publish:
+    name: Publish
+    needs:
+      # - test # TODO: Need this!
+      - prepare-publish
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Allow all jobs to complete even if one or more fails.
+      matrix:
+        environment: ['NPM', 'GitHub Packages']
+        package-path: ${{ fromJson(needs.prepare-publish.outputs.workspace-paths) }}
+    environment:
+      name: ${{ matrix.environment }}
+      url: ${{ steps.get-release-url.outputs.url }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.package-path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Environment
+        uses: ./.github/actions/setup-environment
+      - name: Get package name
+        id: get-package-name
+        run: |
+          package_name=$(jq -r '.name' package.json)
+          echo "Package name: ${package_name}"
+          echo "name=${package_name}" >> $GITHUB_OUTPUT
+      - name: Get release version
+        id: get-release-version
+        run: |
+          tag_name="${{ github.event_name == 'release' && github.event.release.tag_name || inputs.version }}"
+          release_version="${tag_name/#v/}"
+          echo "Version: ${release_version}"
+          echo "version=${release_version}" >> $GITHUB_OUTPUT
+      - name: Get release URL
+        id: get-release-url
+        env:
+          # Optional
+          PACKAGE_PAGE_URL: ${{ vars.PACKAGE_PAGE_URL }}
+        run: |
+          if [ -n "$PACKAGE_PAGE_URL" ]; then
+            release_url="$PACKAGE_PAGE_URL"
+          else
+            release_url="https://www.npmjs.com/package/${{ steps.get-package-name.outputs.name }}/v/${{ steps.get-release-version.outputs.version }}"
+          fi
+
+          echo "Release URL: ${release_url}"
+          echo "url=${release_url}" >> $GITHUB_OUTPUT
+      - name: Set package version
+        run: |
+          yarn version "${{ steps.get-release-version.outputs.version }}"
+      - name: Publish package
+        env:
+          # Example: https://registry.npmjs.org for NPM or https://npm.pkg.github.com for GitHub Packages
+          NPM_REGISTRY_SERVER: ${{ vars.NPM_REGISTRY_SERVER }}
+          # Get a token at https://www.npmjs.com/settings/<your-name>/tokens/granular-access-tokens/new
+          # Also, remember to set "Publishing access" to "Require two-factor authentication or an automation or granular access token" in the package settings on npmjs.com
+          # While publishing to GitHub Packages, NPM_AUTH_TOKEN can be omitted so that the automatically generated GITHUB_TOKEN is used - in this case, remember to set the "packages" permission to "write" in the workflow. See: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          yarn config set npmRegistryServer "$NPM_REGISTRY_SERVER"
+          echo -e "npmRegistries:\n  \"$NPM_REGISTRY_SERVER\":\n    npmAuthToken: $NPM_AUTH_TOKEN" > ~/.yarnrc.yml
+          yarn run publish --tag ${{ contains(steps.get-release-version.outputs.version, '-') && 'next' || 'latest' }}
