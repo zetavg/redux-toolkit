@@ -53,55 +53,24 @@ jobs:
         package-path: ${{ fromJson(needs.prepare-publish.outputs.workspace-paths) }}
     environment:
       name: ${{ matrix.environment }}
-      url: ${{ steps.get-release-url.outputs.url }}
-    defaults:
-      run:
-        working-directory: ${{ matrix.package-path }}
+      url: ${{ steps.publish.outputs.url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Setup Environment
         uses: ./.github/actions/setup-environment
-      - name: Get package name
-        id: get-package-name
-        run: |
-          package_name=$(jq -r '.name' package.json)
-          echo "Package name: ${package_name}"
-          echo "name=${package_name}" >> $GITHUB_OUTPUT
-      - name: Get release version
-        id: get-release-version
-        run: |
-          tag_name="${{ github.event_name == 'release' && github.event.release.tag_name || inputs.version }}"
-          release_version="${tag_name/#v/}"
-          echo "Version: ${release_version}"
-          echo "version=${release_version}" >> $GITHUB_OUTPUT
-      - name: Get release URL
-        id: get-release-url
-        env:
-          # Optional
-          PACKAGE_PAGE_URL: ${{ vars.PACKAGE_PAGE_URL }}
-        run: |
-          if [ -n "$PACKAGE_PAGE_URL" ]; then
-            release_url="$PACKAGE_PAGE_URL"
-          else
-            release_url="https://www.npmjs.com/package/${{ steps.get-package-name.outputs.name }}/v/${{ steps.get-release-version.outputs.version }}"
-          fi
-          echo "Release URL: ${release_url}"
-          echo "url=${release_url}" >> $GITHUB_OUTPUT
-      - name: Set package version
-        run: |
-          jq '.version = "${{ steps.get-release-version.outputs.version }}"' package.json > package.json.updated
-          mv package.json package.json.original
-          mv package.json.updated package.json
       - name: Publish package
-        env:
+        id: publish
+        uses: ./.github/actions/yarn-npm-publish
+        with:
           # Example: https://registry.npmjs.org for NPM or https://npm.pkg.github.com for GitHub Packages
-          NPM_REGISTRY_SERVER: ${{ vars.NPM_REGISTRY_SERVER }}
+          npm-registry-server: ${{ vars.NPM_REGISTRY_SERVER }}
           # Get a token at https://www.npmjs.com/settings/<your-name>/tokens/granular-access-tokens/new
           # Also, remember to set "Publishing access" to "Require two-factor authentication or an automation or granular access token" in the package settings on npmjs.com
           # While publishing to GitHub Packages, NPM_AUTH_TOKEN can be omitted so that the automatically generated GITHUB_TOKEN is used - in this case, remember to set the "packages" permission to "write" in the workflow, and also give this repository's actions write access in the package settings.
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          yarn config set npmRegistryServer "$NPM_REGISTRY_SERVER"
-          echo -e "npmRegistries:\n  \"$NPM_REGISTRY_SERVER\":\n    npmAuthToken: $NPM_AUTH_TOKEN" > ~/.yarnrc.yml
-          yarn run publish --tag ${{ contains(steps.get-release-version.outputs.version, '-') && 'next' || 'latest' }}
+          npm-auth-token: ${{ secrets.NPM_AUTH_TOKEN || secrets.GITHUB_TOKEN}}
+          # The version for publishing. The version in package.json will be updated to this value temporarily so that the package can be published with this version. The heading "v" will be removed if it exists (e.g. "v1.0.0" will be "1.0.0"). If the version includes a hyphen (e.g. "1.2.3-pre1"), the package will be published with the "next" tag, otherwise with the "latest" tag.
+          version: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.version}}
+          working-directory: ${{ matrix.package-path }}
+          publish-command: 'yarn run publish'
+          package-page-url: ${{ vars.PACKAGE_PAGE_URL }} # Optional
