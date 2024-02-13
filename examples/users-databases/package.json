@@ -1,0 +1,23 @@
+{
+  "name": "@zetavg/redux-toolkit-example-user-databases",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit --pretty",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@zetavg/redux-toolkit": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/eslint": "*",
+    "@types/jest": "*",
+    "eslint": "*",
+    "eslint-config-workspace": "workspace:^",
+    "jest": "*",
+    "jest-config-workspace": "workspace:^",
+    "tsconfig-workspace": "workspace:^",
+    "typescript": "*"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "jest.runMode": {
+    "type": "watch",
+    "deferred": true
+  },
+  "jest.virtualFolders": [
+    {
+      "name": "redux-toolkit",
+      "rootPath": "packages/redux-toolkit"
+    },
+    {
+      "name": "examples/counter",
+      "rootPath": "examples/counter"
+    },
+    {
+      "name": "examples/users-databases",
+      "rootPath": "examples/users-databases"
+    }
+  ]
+}
