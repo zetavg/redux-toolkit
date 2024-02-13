@@ -2,5 +2,12 @@
   "extends": "tsconfig-workspace",
   "include": [
     "**/*.ts"
-  ]
+  ],
+  "compilerOptions": {
+    "paths": {
+      // Use the un-compiled source code from workspace dependencies to avoid the need to build them first during development.
+      // To simulate using the compiled code as installing the packages from npm, comment out the following path mappings.
+      "@zetavg/redux-toolkit": ["../../packages/redux-toolkit/src"]
+    }
+  }
 }
